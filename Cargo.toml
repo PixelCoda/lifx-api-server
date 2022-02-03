@@ -1,0 +1,12 @@
+[package]
+name = "lifx-api-server"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+lifx-rs = "0.1.22"
+lifx-core = "0.2.0"
+get_if_addrs = "0.5.3"
+failure = "0.1.2"
