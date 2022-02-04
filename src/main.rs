@@ -1,10 +1,20 @@
 use get_if_addrs::{get_if_addrs, IfAddr, Ifv4Addr};
-use lifx_core::{get_product_info, BuildOptions, Message, PowerLevel, RawMessage, Service, HSBK};
+use lifx_rs::lan::{get_product_info, BuildOptions, Message, PowerLevel, RawMessage, Service, HSBK};
 use std::collections::HashMap;
 use std::net::{IpAddr, SocketAddr, UdpSocket};
 use std::sync::{Arc, Mutex};
 use std::thread::{sleep, spawn};
 use std::time::{Duration, Instant};
+
+use rand::distributions::Alphanumeric;
+use rand::{thread_rng, Rng};
+
+use rouille::Request;
+use rouille::Response;
+
+use serde_json::json;
+
+use serde::{Serialize, Deserialize};
 
 const HOUR: Duration = Duration::from_secs(60 * 60);
 
@@ -27,7 +37,9 @@ impl<T> RefreshableData<T> {
     }
     fn update(&mut self, data: T) {
         self.data = Some(data);
-        self.last_updated = Instant::now()
+        self.last_updated = Instant::now();
+
+
     }
     fn needs_refresh(&self) -> bool {
         self.data.is_none() || self.last_updated.elapsed() > self.max_age
@@ -37,17 +49,47 @@ impl<T> RefreshableData<T> {
     }
 }
 
+#[derive(Debug, Serialize)]
 struct BulbInfo {
+    pub id: String,
+    pub uuid: String,
+    pub label: String,
+    pub connected: bool,
+    pub power: String,
+    #[serde(rename = "color")]
+    pub lifx_color: Option<LifxColor>,
+    // pub brightness: f64,
+    // // pub group: Group,
+    // // pub location: Location,
+    // // pub product: Product,
+    // #[serde(rename = "last_seen")]
+    // pub last_seen: String,
+    // #[serde(rename = "seconds_since_seen")]
+    // pub seconds_since_seen: i64,
+    // pub error: Option<String>,
+    // pub errors: Option<Vec<Error>>,
+
+    #[serde(skip_serializing)]
     last_seen: Instant,
+    #[serde(skip_serializing)]
     source: u32,
+    #[serde(skip_serializing)]
     target: u64,
+    #[serde(skip_serializing)]
     addr: SocketAddr,
+    #[serde(skip_serializing)]
     name: RefreshableData<String>,
+    #[serde(skip_serializing)]
     model: RefreshableData<(u32, u32)>,
+    #[serde(skip_serializing)]
     location: RefreshableData<String>,
+    #[serde(skip_serializing)]
     host_firmware: RefreshableData<u32>,
+    #[serde(skip_serializing)]
     wifi_firmware: RefreshableData<u32>,
+    #[serde(skip_serializing)]
     power_level: RefreshableData<PowerLevel>,
+    #[serde(skip_serializing)]
     color: Color,
 }
 
@@ -58,9 +100,28 @@ enum Color {
     Multi(RefreshableData<Vec<Option<HSBK>>>),
 }
 
+/// Represents an LIFX Color
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LifxColor {
+    pub hue: u16,
+    pub saturation: u16,
+    pub kelvin: u16,
+    pub brightness: u16,
+}
+
+
 impl BulbInfo {
     fn new(source: u32, target: u64, addr: SocketAddr) -> BulbInfo {
+        let id: String = thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
+        let uuid: String = thread_rng().sample_iter(&Alphanumeric).take(30).map(char::from).collect();
         BulbInfo {
+            id,
+            uuid,
+            label: format!(""),
+            connected: true,
+            power: format!("off"),
+            lifx_color: None,
             last_seen: Instant::now(),
             source,
             target,
@@ -111,71 +172,73 @@ impl BulbInfo {
             Color::Multi(d) => self.refresh_if_needed(sock, d)?,
         }
 
+    
+
         Ok(())
     }
 }
 
-impl std::fmt::Debug for BulbInfo {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "BulbInfo({:0>16X} - {}  ", self.target, self.addr)?;
+// impl std::fmt::Debug for BulbInfo {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         write!(f, "BulbInfo({:0>16X} - {}  ", self.target, self.addr)?;
 
-        if let Some(name) = self.name.as_ref() {
-            write!(f, "{}", name)?;
-        }
-        if let Some(location) = self.location.as_ref() {
-            write!(f, "/{}", location)?;
-        }
-        if let Some((vendor, product)) = self.model.as_ref() {
-            if let Some(info) = get_product_info(*vendor, *product) {
-                write!(f, " - {} ", info.name)?;
-            } else {
-                write!(
-                    f,
-                    " - Unknown model (vendor={}, product={}) ",
-                    vendor, product
-                )?;
-            }
-        }
-        if let Some(fw_version) = self.host_firmware.as_ref() {
-            write!(f, " McuFW:{:x}", fw_version)?;
-        }
-        if let Some(fw_version) = self.wifi_firmware.as_ref() {
-            write!(f, " WifiFW:{:x}", fw_version)?;
-        }
-        if let Some(level) = self.power_level.as_ref() {
-            if *level == PowerLevel::Enabled {
-                write!(f, "  Powered On(")?;
-                match self.color {
-                    Color::Unknown => write!(f, "??")?,
-                    Color::Single(ref color) => {
-                        f.write_str(
-                            &color
-                                .as_ref()
-                                .map(|c| c.describe(false))
-                                .unwrap_or_else(|| "??".to_owned()),
-                        )?;
-                    }
-                    Color::Multi(ref color) => {
-                        if let Some(vec) = color.as_ref() {
-                            write!(f, "Zones: ")?;
-                            for zone in vec {
-                                if let Some(color) = zone {
-                                    write!(f, "{} ", color.describe(true))?;
-                                } else {
-                                    write!(f, "?? ")?;
-                                }
-                            }
-                        }
-                    }
-                }
-                write!(f, ")")?;
-            } else {
-                write!(f, "  Powered Off")?;
-            }
-        }
-        write!(f, ")")
-    }
-}
+//         if let Some(name) = self.name.as_ref() {
+//             write!(f, "{}", name)?;
+//         }
+//         if let Some(location) = self.location.as_ref() {
+//             write!(f, "/{}", location)?;
+//         }
+//         if let Some((vendor, product)) = self.model.as_ref() {
+//             if let Some(info) = get_product_info(*vendor, *product) {
+//                 write!(f, " - {} ", info.name)?;
+//             } else {
+//                 write!(
+//                     f,
+//                     " - Unknown model (vendor={}, product={}) ",
+//                     vendor, product
+//                 )?;
+//             }
+//         }
+//         if let Some(fw_version) = self.host_firmware.as_ref() {
+//             write!(f, " McuFW:{:x}", fw_version)?;
+//         }
+//         if let Some(fw_version) = self.wifi_firmware.as_ref() {
+//             write!(f, " WifiFW:{:x}", fw_version)?;
+//         }
+//         if let Some(level) = self.power_level.as_ref() {
+//             if *level == PowerLevel::Enabled {
+//                 write!(f, "  Powered On(")?;
+//                 match self.color {
+//                     Color::Unknown => write!(f, "??")?,
+//                     Color::Single(ref color) => {
+//                         f.write_str(
+//                             &color
+//                                 .as_ref()
+//                                 .map(|c| c.describe(false))
+//                                 .unwrap_or_else(|| "??".to_owned()),
+//                         )?;
+//                     }
+//                     Color::Multi(ref color) => {
+//                         if let Some(vec) = color.as_ref() {
+//                             write!(f, "Zones: ")?;
+//                             for zone in vec {
+//                                 if let Some(color) = zone {
+//                                     write!(f, "{} ", color.describe(true))?;
+//                                 } else {
+//                                     write!(f, "?? ")?;
+//                                 }
+//                             }
+//                         }
+//                     }
+//                 }
+//                 write!(f, ")")?;
+//             } else {
+//                 write!(f, "  Powered Off")?;
+//             }
+//         }
+//         write!(f, ")")
+//     }
+// }
 
 struct Manager {
     bulbs: Arc<Mutex<HashMap<u64, BulbInfo>>>,
@@ -209,14 +272,18 @@ impl Manager {
         Ok(mgr)
     }
 
-    fn handle_message(raw: RawMessage, bulb: &mut BulbInfo) -> Result<(), lifx_core::Error> {
+    fn handle_message(raw: RawMessage, bulb: &mut BulbInfo) -> Result<(), lifx_rs::lan::Error> {
         match Message::from_raw(&raw)? {
             Message::StateService { port, service } => {
                 // if port != bulb.addr.port() as u32 || service != Service::UDP {
                 //     println!("Unsupported service: {:?}/{}", service, port);
                 // }
             }
-            Message::StateLabel { label } => bulb.name.update(label.0),
+            Message::StateLabel { label } => {
+                bulb.name.update(label.0);
+                bulb.label = bulb.name.data.as_ref().unwrap().to_string();
+
+            },
             Message::StateLocation { label, .. } => bulb.location.update(label.0),
             Message::StateVersion {
                 vendor, product, ..
@@ -239,7 +306,17 @@ impl Manager {
                     }
                 }
             }
-            Message::StatePower { level } => bulb.power_level.update(level),
+            Message::StatePower { level } => {
+                bulb.power_level.update(level);
+
+                if bulb.power_level.data.as_ref().unwrap() ==  &PowerLevel::Enabled{
+                    bulb.power = format!("on");
+                } else {
+                    bulb.power = format!("off");
+                }
+
+               
+            },
             Message::StateHostFirmware { version, .. } => bulb.host_firmware.update(version),
             Message::StateWifiFirmware { version, .. } => bulb.wifi_firmware.update(version),
             Message::LightState {
@@ -250,6 +327,18 @@ impl Manager {
             } => {
                 if let Color::Single(ref mut d) = bulb.color {
                     d.update(color);
+
+                    let bc = color;
+
+
+                    bulb.lifx_color = Some(LifxColor{
+                        hue: bc.hue,
+                        saturation: bc.saturation,
+                        kelvin: bc.kelvin,
+                        brightness: bc.brightness,
+                    });
+
+
                     bulb.power_level.update(power);
                 }
                 bulb.name.update(label.0);
@@ -380,21 +469,38 @@ impl Manager {
 }
 
 fn main() {
-    let mut mgr = Manager::new().unwrap();
 
-    loop {
-        if Instant::now() - mgr.last_discovery > Duration::from_secs(300) {
-            mgr.discover().unwrap();
-        }
+    let mut mgr = Manager::new().unwrap();
+    if Instant::now() - mgr.last_discovery > Duration::from_secs(300) {
+        mgr.discover().unwrap();
+    }
+    mgr.refresh();
+
+    rouille::start_server("0.0.0.0:8089", move |request| {
+
+    
         mgr.refresh();
+   
 
         println!("\n\n\n\n");
         if let Ok(bulbs) = mgr.bulbs.lock() {
+
+            let mut bulbs_vec: Vec<&BulbInfo> = Vec::new();
+            
             for bulb in bulbs.values() {
-                println!("{:?}", bulb);
+                println!("{:?}", *bulb);
+                bulbs_vec.push(bulb);
             }
+
+            return Response::json(&bulbs_vec);
         }
 
         sleep(Duration::from_secs(5));
+
+        Response::text("hello world")
+    });
+
+    loop {
+     
     }
 }
