@@ -633,8 +633,8 @@ dependencies = [
 
 [[package]]
 name = "lifx-rs"
-version = "0.1.24"
-source = "git+https://github.com/PixelCoda/lifx-rs.git#f00830e411ff59660f6c6dad61b8ac5fa2a40259"
+version = "0.1.26"
+source = "git+https://github.com/PixelCoda/lifx-rs.git#e8686e94181273810cece698782c830bee201a40"
 dependencies = [
  "byteorder",
  "reqwest",

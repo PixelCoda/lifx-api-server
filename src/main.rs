@@ -1,5 +1,5 @@
 use get_if_addrs::{get_if_addrs, IfAddr, Ifv4Addr};
-use lifx_rs::lan::{get_product_info, BuildOptions, Message, PowerLevel, RawMessage, Service, HSBK};
+use lifx_rs::lan::{get_product_info, BuildOptions, Message, PowerLevel, ProductInfo, RawMessage, Service, HSBK};
 use std::collections::HashMap;
 use std::net::{IpAddr, SocketAddr, UdpSocket};
 use std::sync::{Arc, Mutex};
@@ -58,25 +58,32 @@ struct BulbInfo {
     pub power: String,
     #[serde(rename = "color")]
     pub lifx_color: Option<LifxColor>,
-    // pub brightness: f64,
-    // // pub group: Group,
-    // // pub location: Location,
-    // // pub product: Product,
-    // #[serde(rename = "last_seen")]
-    // pub last_seen: String,
-    // #[serde(rename = "seconds_since_seen")]
-    // pub seconds_since_seen: i64,
+    pub brightness: f64,
+    #[serde(rename = "group")]
+    pub lifx_group: Option<LifxGroup>,
+    #[serde(rename = "location")]
+    pub lifx_location: Option<LifxLocation>,
+    pub product: Option<ProductInfo>,
+    #[serde(rename = "last_seen")]
+    pub lifx_last_seen: String,
+    #[serde(rename = "seconds_since_seen")]
+    pub seconds_since_seen: i64,
     // pub error: Option<String>,
     // pub errors: Option<Vec<Error>>,
 
     #[serde(skip_serializing)]
     last_seen: Instant,
-    #[serde(skip_serializing)]
+
     source: u32,
-    #[serde(skip_serializing)]
+
     target: u64,
-    #[serde(skip_serializing)]
+
     addr: SocketAddr,
+
+    #[serde(skip_serializing)]
+    group: RefreshableData<LifxGroup>,
+
+
     #[serde(skip_serializing)]
     name: RefreshableData<String>,
     #[serde(skip_serializing)]
@@ -100,6 +107,14 @@ enum Color {
     Multi(RefreshableData<Vec<Option<HSBK>>>),
 }
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+#[doc(hidden)]
+pub struct LifxLocation {
+    pub id: String,
+    pub name: String,
+}
+
 /// Represents an LIFX Color
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -110,6 +125,13 @@ pub struct LifxColor {
     pub brightness: u16,
 }
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+#[doc(hidden)]
+pub struct LifxGroup {
+    pub id: String,
+    pub name: String,
+}
 
 impl BulbInfo {
     fn new(source: u32, target: u64, addr: SocketAddr) -> BulbInfo {
@@ -122,13 +144,20 @@ impl BulbInfo {
             connected: true,
             power: format!("off"),
             lifx_color: None,
+            brightness: 0.0,
+            lifx_group: None,
+            lifx_location: None,
+            product: None,
+            lifx_last_seen: format!(""),
+            seconds_since_seen: 0,
             last_seen: Instant::now(),
             source,
             target,
             addr,
+            group: RefreshableData::empty(HOUR, Message::GetGroup),
+            location: RefreshableData::empty(HOUR, Message::GetLocation),
             name: RefreshableData::empty(HOUR, Message::GetLabel),
             model: RefreshableData::empty(HOUR, Message::GetVersion),
-            location: RefreshableData::empty(HOUR, Message::GetLocation),
             host_firmware: RefreshableData::empty(HOUR, Message::GetHostFirmware),
             wifi_firmware: RefreshableData::empty(HOUR, Message::GetWifiFirmware),
             power_level: RefreshableData::empty(Duration::from_secs(15), Message::GetPower),
@@ -166,6 +195,7 @@ impl BulbInfo {
         self.refresh_if_needed(sock, &self.host_firmware)?;
         self.refresh_if_needed(sock, &self.wifi_firmware)?;
         self.refresh_if_needed(sock, &self.power_level)?;
+        self.refresh_if_needed(sock, &self.group)?;
         match &self.color {
             Color::Unknown => (), // we'll need to wait to get info about this bulb's model, so we'll know if it's multizone or not
             Color::Single(d) => self.refresh_if_needed(sock, d)?,
@@ -284,13 +314,30 @@ impl Manager {
                 bulb.label = bulb.name.data.as_ref().unwrap().to_string();
 
             },
-            Message::StateLocation { label, .. } => bulb.location.update(label.0),
+
+  
+            Message::StateLocation { location, label, updated_at } => {
+
+                let lab = label.0;
+
+                bulb.location.update(lab.clone());
+
+
+          
+                let group_two = LifxLocation{id: format!("{:?}", location.0), name: lab};
+                bulb.lifx_location = Some(group_two);
+
+            },
             Message::StateVersion {
                 vendor, product, ..
             } => {
                 bulb.model.update((vendor, product));
                 if let Some(info) = get_product_info(vendor, product) {
-                    if info.multizone {
+                    // println!("{:?}", info.clone());
+
+                    bulb.product = Some(info.clone());
+
+                    if info.capabilities.has_multizone {
                         bulb.color = Color::Multi(RefreshableData::empty(
                             Duration::from_secs(15),
                             Message::GetColorZones {
@@ -317,6 +364,18 @@ impl Manager {
 
                
             },
+
+            Message::StateGroup { group, label, updated_at } => {
+
+                let group_one = LifxGroup{id: format!("{:?}", group.0), name: label.to_string()};
+                
+                let group_two = LifxGroup{id: format!("{:?}", group.0), name: label.to_string()};
+                bulb.group.update(group_one);
+                bulb.lifx_group = Some(group_two);
+            },
+
+
+
             Message::StateHostFirmware { version, .. } => bulb.host_firmware.update(version),
             Message::StateWifiFirmware { version, .. } => bulb.wifi_firmware.update(version),
             Message::LightState {
@@ -337,6 +396,8 @@ impl Manager {
                         kelvin: bc.kelvin,
                         brightness: bc.brightness,
                     });
+
+                    bulb.brightness = (bc.brightness / 65535) as f64;
 
 
                     bulb.power_level.update(power);
@@ -480,20 +541,68 @@ fn main() {
 
     
         mgr.refresh();
-   
 
-        println!("\n\n\n\n");
-        if let Ok(bulbs) = mgr.bulbs.lock() {
+        // https://api.lifx.com/v1/lights/:selector
+        if request.url().contains("/v1/lights/"){
 
-            let mut bulbs_vec: Vec<&BulbInfo> = Vec::new();
-            
-            for bulb in bulbs.values() {
-                println!("{:?}", *bulb);
-                bulbs_vec.push(bulb);
+            let urls = request.url().to_string();
+            let mut split = urls.split("/");
+            let vec: Vec<&str> = split.collect();
+
+
+            let selector = vec[3];
+
+            println!("{}", vec[3]);
+
+
+            println!("\n\n\n\n");
+            if let Ok(bulbs) = mgr.bulbs.lock() {
+    
+                let mut bulbs_vec: Vec<&BulbInfo> = Vec::new();
+                
+                for bulb in bulbs.values() {
+                    println!("{:?}", *bulb);
+                    bulbs_vec.push(bulb);
+                }
+
+                if selector == "all"{
+                    return Response::json(&bulbs_vec);
+                }
+
+                if selector.contains("group_id:"){
+                    bulbs_vec = bulbs_vec
+                    .into_iter()
+                    .filter(|b| b.lifx_group.as_ref().unwrap().id.contains(&selector.replace("group_id:", "")))
+                    .collect();
+
+                    return Response::json(&bulbs_vec);
+                }
+
+                if selector.contains("location_id:"){
+                    bulbs_vec = bulbs_vec
+                    .into_iter()
+                    .filter(|b| b.lifx_location.as_ref().unwrap().id.contains(&selector.replace("location_id:", "")))
+                    .collect();
+
+                    return Response::json(&bulbs_vec);
+                }
+
+                if selector.contains("id:"){
+                    bulbs_vec = bulbs_vec
+                    .into_iter()
+                    .filter(|b| b.id.contains(&selector.replace("id:", "")))
+                    .collect();
+
+                    return Response::json(&bulbs_vec);
+                }
+    
+                
             }
 
-            return Response::json(&bulbs_vec);
         }
+   
+
+       
 
         sleep(Duration::from_secs(5));
 
