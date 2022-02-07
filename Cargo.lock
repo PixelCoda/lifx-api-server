@@ -659,7 +659,6 @@ dependencies = [
  "get_if_addrs",
  "lifx-rs",
  "palette",
- "rand 0.8.4",
  "rouille",
  "serde",
  "serde_derive",
