@@ -2,13 +2,20 @@
 
 [package]
 name = "lifx-api-server"
+description = "A library/server that mimicks the official LIFX API using the local LAN protocol."
 version = "0.1.0"
 edition = "2018"
+authors = ["Caleb Mitchell Smith-Woolrich <calebsmithwoolrich@gmail.com>"]
+license = "MIT OR Apache-2.0"
+documentation = "https://docs.rs/lifx-api-server"
+repository = "https://github.com/PixelCoda/lifx-api-server"
+readme = "README.md"
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-lifx-rs = { git = "https://github.com/PixelCoda/lifx-rs.git", version = "0.1.26" }
+lifx-rs = { git = "https://github.com/PixelCoda/lifx-rs.git", version = "*" }
 
 get_if_addrs = "0.5.3"
 failure = "0.1.2"

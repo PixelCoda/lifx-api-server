@@ -28,9 +28,6 @@ fn main() {
 
     lifx_api_server::start(config);
 
-    // Now you can use curl to access the api
-    // curl -X PUT "http://localhost:8089/v1/lights/all/state"      -H "Authorization: Bearer xxx"      -d "color=kelvin:9000"
-    // or with rust using lifx-rs......see example below
 
     println!("sync");
 
@@ -38,6 +35,10 @@ fn main() {
         
     }
 }
+// Now you can use curl to access the api
+// curl -X PUT "http://localhost:8089/v1/lights/all/state"      -H "Authorization: Bearer xxx"      -d "color=kelvin:9000"
+// or with rust using lifx-rs......see example below
+
 ```
 
 
