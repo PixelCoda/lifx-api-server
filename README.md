@@ -35,14 +35,12 @@ fn main() {
         
     }
 }
-// Now you can use curl to access the api
-// curl -X PUT "http://localhost:8089/v1/lights/all/state"      -H "Authorization: Bearer xxx"      -d "color=kelvin:9000"
-// or with rust using lifx-rs......see example below
+
 
 ```
-
-
-lifx-rs example:
+Now you can use curl to access the api
+curl -X PUT "http://localhost:8089/v1/lights/all/state"      -H "Authorization: Bearer xxx"      -d "color=kelvin:9000"
+or with rust using [lifx-rs](https://crates.io/crates/lifx-rs):
 ```rust
 extern crate lifx_rs as lifx;
 
