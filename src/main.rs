@@ -14,6 +14,30 @@ fn main() {
     // or rust
 
 
+    // extern crate lifx_rs as lifx;
+
+    // fn main() {
+    
+    //     let key = "xxx".to_string();
+    //     let mut api_endpoints: Vec<String> = Vec::new();
+    
+    //     api_endpoints.push(format!("http://localhost:8089"));
+    
+    //     let config = lifx::LifxConfig{
+    //         access_token: key.clone(),
+    //         api_endpoints: api_endpoints
+    //     };
+        
+    //     let mut off_state = lifx::State::new();
+    //     off_state.power = Some(format!("off"));
+    
+    //     // Turn off all lights
+    //     lifx::Light::set_state_by_selector(config.clone(), format!("all"), off_state);
+    
+    // }
+
+
+
     println!("sync");
 
     loop {
