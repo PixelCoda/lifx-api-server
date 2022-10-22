@@ -12,7 +12,7 @@ A library/server that mimicks the official LIFX API using the local LAN protocol
 
 Add the following line to your cargo.toml:
 ```
-lifx-api-server = "0.1.11"
+lifx-api-server = "0.1.12"
 ```
 
 ### Example:

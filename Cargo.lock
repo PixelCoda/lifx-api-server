@@ -652,13 +652,14 @@ checksum = "e74d72e0f9b65b5b4ca49a346af3976df0f9c61d550727f349ecd559f251a26c"
 
 [[package]]
 name = "lifx-api-server"
-version = "0.1.0"
+version = "0.1.12"
 dependencies = [
  "colors-transform",
  "failure",
  "get_if_addrs",
  "lifx-rs",
  "palette",
+ "rand 0.8.4",
  "rouille",
  "serde",
  "serde_derive",
@@ -667,8 +668,8 @@ dependencies = [
 
 [[package]]
 name = "lifx-rs"
-version = "0.1.27"
-source = "git+https://github.com/PixelCoda/lifx-rs.git#95700d81b282f0856acad8af8a6f6166d0212ce0"
+version = "0.1.28"
+source = "git+https://github.com/PixelCoda/lifx-rs.git#0addc5086687c20dce1e0e92afdb8534d1be4516"
 dependencies = [
  "byteorder",
  "reqwest",

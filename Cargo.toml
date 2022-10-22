@@ -3,7 +3,7 @@
 [package]
 name = "lifx-api-server"
 description = "A library/server that mimicks the official LIFX API using the local LAN protocol."
-version = "0.1.11"
+version = "0.1.12"
 edition = "2018"
 authors = ["Caleb Mitchell Smith-Woolrich <calebsmithwoolrich@gmail.com>"]
 license = "MIT OR Apache-2.0"
@@ -16,11 +16,10 @@ readme = "README.md"
 
 [dependencies]
 lifx-rs = { git = "https://github.com/PixelCoda/lifx-rs.git", version = "0.1.28" }
-
+rand = "0.8.4"
 get_if_addrs = "0.5.3"
 failure = "0.1.2"
 rouille = "3.5.0"
-
 serde_json = "1.0"
 serde_derive = "1.0.130"
 palette = "0.2.1"

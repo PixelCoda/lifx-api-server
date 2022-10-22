@@ -12,7 +12,8 @@ use std::sync::{Arc, Mutex};
 use std::thread::{sleep, spawn};
 use std::time::{Duration, Instant};
 use rouille::try_or_400;
-
+use rand::{thread_rng, Rng};
+use rand::distributions::Alphanumeric;
 use std::thread;
 
 use rouille::Request;
@@ -148,11 +149,11 @@ pub struct LifxGroup {
 
 impl BulbInfo {
     fn new(source: u32, target: u64, addr: SocketAddr) -> BulbInfo {
-        // let id: String = thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
-        // let uuid: String = thread_rng().sample_iter(&Alphanumeric).take(30).map(char::from).collect();
+        let id: String = thread_rng().sample_iter(&Alphanumeric).take(12).map(char::from).collect();
+        let uuid: String = thread_rng().sample_iter(&Alphanumeric).take(30).map(char::from).collect();
         BulbInfo {
-            id: source.to_string(),
-            uuid: target.to_string(),
+            id: id.to_string(),
+            uuid: uuid.to_string(),
             label: format!(""),
             connected: true,
             power: format!("off"),
