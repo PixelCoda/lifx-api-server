@@ -174,7 +174,7 @@ impl BulbInfo {
             model: RefreshableData::empty(HOUR, Message::GetVersion),
             host_firmware: RefreshableData::empty(HOUR, Message::GetHostFirmware),
             wifi_firmware: RefreshableData::empty(HOUR, Message::GetWifiFirmware),
-            power_level: RefreshableData::empty(Duration::from_secs(15), Message::GetPower),
+            power_level: RefreshableData::empty(Duration::from_millis(500), Message::GetPower),
             color: LiColor::Unknown,
         }
     }
