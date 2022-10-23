@@ -1,7 +1,7 @@
 FROM rust:latest
 MAINTAINER caleb <calebsmithwoolrich@gmail.com>
 
-RUN echo "Version: 0.1.29"
+RUN echo "Version: 0.1.30"
 
 RUN mkdir -p /app && git clone https://github.com/PixelCoda/lifx-api-server /app \
     && cd /app \
