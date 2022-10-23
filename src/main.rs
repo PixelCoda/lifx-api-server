@@ -1,10 +1,14 @@
 extern crate lifx_api_server;
+use std::env;
 
 fn main() {
 
+ 
+    let secret_key = env::var("SECRET_KEY").expect("$SECRET_KEY is not set");
+
     let config = lifx_api_server::Config { 
-        secret_key: format!("xxx"),
-        port: 8089
+        secret_key: secret_key.to_string(),
+        port: 8000
     };
 
     lifx_api_server::start(config);
