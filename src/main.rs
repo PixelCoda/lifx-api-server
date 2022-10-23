@@ -3,6 +3,9 @@ use std::env;
 
 fn main() {
 
+    sudo::with_env(&["SECRET_KEY"]).unwrap();
+    sudo::escalate_if_needed().unwrap();
+
  
     let secret_key = env::var("SECRET_KEY").expect("$SECRET_KEY is not set");
 

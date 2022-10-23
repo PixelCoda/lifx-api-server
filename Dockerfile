@@ -1,7 +1,7 @@
 FROM rust:latest
 MAINTAINER caleb <calebsmithwoolrich@gmail.com>
 
-RUN echo "Version: 0.1.28"
+RUN echo "Version: 0.1.29"
 
 EXPOSE 8000
 EXPOSE 56700

@@ -24,6 +24,7 @@ serde_json = "1.0"
 serde_derive = "1.0.130"
 palette = "0.2.1"
 colors-transform = "0.2.11"
+sudo = "0.5"
 
 [dependencies.serde]
 version = "1.0"
