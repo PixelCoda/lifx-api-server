@@ -93,3 +93,19 @@ Released under Apache 2.0 or MIT.
  * ERC20: 0x7A66beaebF7D0d17598d37525e63f524CfD23452
  * XLM: GCJAUMCO2L7PTYMXELQ6GHBTF25MCQKEBNSND2C4QMUPTSVCPEN3LCOG
  * XTZ: tz1SgJppPn56whprsDDGcqR4fxqCr2PXvg1R
+
+
+#### Deploying on CapRover (WIP)
+
+ {
+  "TaskTemplate": {
+    "Networks": [
+      {
+        "Target": "captain-overlay-network"
+      },
+      {
+        "Target": "host.docker.internal:host-gateway"
+      }
+    ]
+  }
+}

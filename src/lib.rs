@@ -352,7 +352,7 @@ struct Manager {
 
 impl Manager {
     fn new() -> Result<Manager, failure::Error> {
-        let sock = UdpSocket::bind("0.0.0.0:56700")?;
+        let sock = UdpSocket::bind("host.docker.internal:56700")?;
         sock.set_broadcast(true)?;
 
         // spawn a thread that can send to our socket
