@@ -12,7 +12,7 @@ A library/server that mimicks the official LIFX API using the local LAN protocol
 
 Add the following line to your cargo.toml:
 ```
-lifx-api-server = "0.1.12"
+lifx-api-server = "0.1.14"
 ```
 
 ### Example:
@@ -95,17 +95,8 @@ Released under Apache 2.0 or MIT.
  * XTZ: tz1SgJppPn56whprsDDGcqR4fxqCr2PXvg1R
 
 
-#### Deploying on CapRover (WIP)
-
- {
-  "TaskTemplate": {
-    "Networks": [
-      {
-        "Target": "captain-overlay-network"
-      },
-      {
-        "Target": "host.docker.internal:host-gateway"
-      }
-    ]
-  }
-}
+#### TODO:
+- Server Application Release for debian linux
+- Ability to automatically update
+- Easy Installer
+- Move to the opensam foundation project

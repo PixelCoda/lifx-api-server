@@ -973,7 +973,7 @@ pub fn start(config: Config) {
                             let rgb2 = Rgb::from_hex_str(format!("#{}", hex).as_str()).unwrap();
                             // Rgb { r: 255.0, g: 204.0, b: 0.0 }
 
-                            // println!("{:?}", rgb2);
+                            println!("{:?}", rgb2);
 
                             let red_int = rgb2.get_red().to_string().parse::<i64>().unwrap(); 
                             let red_float: f32 = (red_int / 255) as f32;

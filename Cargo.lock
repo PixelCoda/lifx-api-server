@@ -664,6 +664,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
+ "sudo",
 ]
 
 [[package]]
@@ -1513,6 +1514,16 @@ checksum = "66d72b759436ae32898a2af0a14218dbf55efde3feeb170eb623637db85ee1e0"
 dependencies = [
  "libc",
  "winapi 0.3.9",
+]
+
+[[package]]
+name = "sudo"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2a88e74edf206f281aff2820aa2066c781331044c770626dcafe19491f214e05"
+dependencies = [
+ "libc",
+ "log",
 ]
 
 [[package]]
