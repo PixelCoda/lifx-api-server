@@ -613,7 +613,8 @@ pub struct Config {
 pub fn start(config: Config) {
 
 
-
+    sudo::with_env(&["SECRET_KEY"]).unwrap();
+    sudo::escalate_if_needed().unwrap();
 
     let mut mgr_arc = Arc::new(Mutex::new(Manager::new().unwrap()));
 

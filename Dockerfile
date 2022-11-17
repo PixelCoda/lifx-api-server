@@ -1,7 +1,7 @@
 FROM rust:latest
 MAINTAINER caleb <calebsmithwoolrich@gmail.com>
 
-RUN echo "Version: 0.1.32"
+RUN echo "Version: 0.1.35"
 
 RUN mkdir -p /app && git clone https://git.opensam.foundation/sam/lifx-server.git /app \
     && cd /app \
@@ -10,6 +10,6 @@ RUN mkdir -p /app && git clone https://git.opensam.foundation/sam/lifx-server.gi
 WORKDIR /app/target/release
 
 EXPOSE 8000
-EXPOSE 56700
+EXPOSE 56700/udp
 
 CMD ["./lifx-api-server"]
