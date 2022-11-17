@@ -1,7 +1,7 @@
 FROM rust:latest
 MAINTAINER caleb <calebsmithwoolrich@gmail.com>
 
-RUN echo "Version: 0.1.37"
+RUN echo "Version: 0.1.38"
 
 RUN mkdir -p /app && git clone https://git.opensam.foundation/sam/lifx-server.git /app \
     && cd /app \
