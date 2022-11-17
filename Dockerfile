@@ -1,9 +1,9 @@
 FROM rust:latest
 MAINTAINER caleb <calebsmithwoolrich@gmail.com>
 
-RUN echo "Version: 0.1.31"
+RUN echo "Version: 0.1.32"
 
-RUN mkdir -p /app && git clone https://github.com/PixelCoda/lifx-api-server /app \
+RUN mkdir -p /app && git clone https://git.opensam.foundation/sam/lifx-server.git /app \
     && cd /app \
     && cargo build --release  \
     && rm -Rf /app/src  /app/target/release/build /app/target/release/deps /app/target/release/examples/ /app/target/release/incremental/ /app/target/release/native
