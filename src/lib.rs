@@ -798,7 +798,7 @@ pub fn start(config: Config) {
                                 if cc.contains("red"){
                                     let hbsk_set = HSBK {
                                         hue: 0,
-                                        saturation: 100,
+                                        saturation: 65535,
                                         brightness: brightness,
                                         kelvin: kelvin,
                                     };
@@ -807,8 +807,8 @@ pub fn start(config: Config) {
         
                                 if cc.contains("orange"){
                                     let hbsk_set = HSBK {
-                                        hue: 39,
-                                        saturation: 100,
+                                        hue: 7098,
+                                        saturation: 65535,
                                         brightness: brightness,
                                         kelvin: kelvin,
                                     };
@@ -817,8 +817,8 @@ pub fn start(config: Config) {
         
                                 if cc.contains("yellow"){
                                     let hbsk_set = HSBK {
-                                        hue: 60,
-                                        saturation: 100,
+                                        hue: 10920,
+                                        saturation: 65535,
                                         brightness: brightness,
                                         kelvin: kelvin,
                                     };
@@ -827,8 +827,8 @@ pub fn start(config: Config) {
         
                                 if cc.contains("cyan"){
                                     let hbsk_set = HSBK {
-                                        hue: 180,
-                                        saturation: 100,
+                                        hue: 32760,
+                                        saturation: 65535,
                                         brightness: brightness,
                                         kelvin: kelvin,
                                     };
@@ -837,8 +837,8 @@ pub fn start(config: Config) {
         
                                 if cc.contains("green"){
                                     let hbsk_set = HSBK {
-                                        hue: 120,
-                                        saturation: 100,
+                                        hue: 21840,
+                                        saturation: 65535,
                                         brightness: brightness,
                                         kelvin: kelvin,
                                     };
@@ -847,8 +847,8 @@ pub fn start(config: Config) {
         
                                 if cc.contains("blue"){
                                     let hbsk_set = HSBK {
-                                        hue: 240,
-                                        saturation: 100,
+                                        hue: 43680,
+                                        saturation: 65535,
                                         brightness: brightness,
                                         kelvin: kelvin,
                                     };
@@ -857,8 +857,8 @@ pub fn start(config: Config) {
         
                                 if cc.contains("purple"){
                                     let hbsk_set = HSBK {
-                                        hue: 275,
-                                        saturation: 92,
+                                        hue: 50050,
+                                        saturation: 65535,
                                         brightness: brightness,
                                         kelvin: kelvin,
                                     };
@@ -867,8 +867,8 @@ pub fn start(config: Config) {
         
                                 if cc.contains("pink"){
                                     let hbsk_set = HSBK {
-                                        hue: 350,
-                                        saturation: 25,
+                                        hue: 63700,
+                                        saturation: 25000,
                                         brightness: brightness,
                                         kelvin: kelvin,
                                     };
@@ -941,15 +941,14 @@ pub fn start(config: Config) {
                                     let mut rgb_part_split = rgb_parts.split(",");
                                     let rgb_parts_vec: Vec<&str> = rgb_part_split.collect();
         
-        
                                     let red_int = rgb_parts_vec[0].to_string().parse::<i64>().unwrap(); 
-                                    let red_float: f32 = (red_int / 255) as f32;
+                                    let red_float: f32 = (red_int) as f32;
         
                                     let green_int = rgb_parts_vec[1].to_string().parse::<i64>().unwrap(); 
-                                    let green_float: f32 = (green_int / 255) as f32;
+                                    let green_float: f32 = (green_int) as f32;
         
                                     let blue_int = rgb_parts_vec[2].to_string().parse::<i64>().unwrap(); 
-                                    let blue_float: f32 = (blue_int / 255) as f32;
+                                    let blue_float: f32 = (blue_int) as f32;
         
                                     let hcc = palette::Hsv::from_rgb(palette::Rgb{
                                         red: red_float,
@@ -957,18 +956,21 @@ pub fn start(config: Config) {
                                         blue: blue_float,
                                     });
         
+                                    // TODO: Why does this ugly hack work? Why is lifx api so differ
                                     let hbsk_set = HSBK {
-                                        hue: hcc.hue.to_positive_degrees() as u16,
-                                        saturation: hcc.saturation as u16,
+                                        hue: (hcc.hue.to_positive_degrees() * 182.0) as u16,
+                                        saturation: (hcc.saturation.to_degrees() * 1000.0) as u16,
                                         brightness: brightness,
                                         kelvin: kelvin,
                                     };
+
         
                                     bulb.set_color(&mgr.sock, hbsk_set, duration);
         
                                 }
         
                                 if cc.contains("#"){
+                                    println!("!CC!");
                                     let mut hex_split = cc.split("#");
                                     let hex_vec: Vec<&str> = hex_split.collect();
                                     let hex = hex_vec[1].to_string();
@@ -979,15 +981,18 @@ pub fn start(config: Config) {
                                     println!("{:?}", rgb2);
         
                                     let red_int = rgb2.get_red().to_string().parse::<i64>().unwrap(); 
-                                    let red_float: f32 = (red_int / 255) as f32;
+                                    let red_float: f32 = (red_int) as f32;
         
                                     let green_int = rgb2.get_green().to_string().parse::<i64>().unwrap(); 
-                                    let green_float: f32 = (green_int / 255) as f32;
+                                    let green_float: f32 = (green_int) as f32;
         
                                     let blue_int = rgb2.get_blue().to_string().parse::<i64>().unwrap(); 
-                                    let blue_float: f32 = (blue_int / 255) as f32;
+                                    let blue_float: f32 = (blue_int) as f32;
         
         
+                                    println!("red_float: {:?}", red_float);
+                                    println!("green_float: {:?}", green_float);
+                                    println!("blue_float: {:?}", blue_float);
         
                     
                                     let hcc = palette::Hsv::from_rgb(palette::Rgb{
@@ -995,13 +1000,20 @@ pub fn start(config: Config) {
                                         green: green_float,
                                         blue: blue_float,
                                     });
+
+                                    println!("hcc: {:?}", hcc);
         
+                                    // TODO: Why does this ugly hack work? Why is lifx api so differ
                                     let hbsk_set = HSBK {
-                                        hue: hcc.hue.to_positive_degrees() as u16,
-                                        saturation: hcc.saturation as u16,
+                                        hue: (hcc.hue.to_positive_degrees() * 182.0) as u16,
+                                        saturation: (hcc.saturation.to_degrees() * 1000.0) as u16,
                                         brightness: brightness,
                                         kelvin: kelvin,
                                     };
+
+                                    println!("hbsk_set: {:?}", hbsk_set);
+        
+        
         
                                     bulb.set_color(&mgr.sock, hbsk_set, duration);
         
