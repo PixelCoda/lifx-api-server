@@ -18,7 +18,7 @@ readme = "README.md"
 lifx-rs = { git = "https://github.com/PixelCoda/lifx-rs.git", version = "0.1.29" }
 failure = "0.1.8"
 palette = "0.2.1"
-rand = "*"
+rand = "0.8.4"
 get_if_addrs = "*"
 serde_json = "*"
 serde_derive = "*"

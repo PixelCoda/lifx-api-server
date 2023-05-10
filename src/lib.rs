@@ -15,7 +15,6 @@ use rouille::try_or_400;
 use rand::{thread_rng, Rng};
 use rand::distributions::Alphanumeric;
 use std::thread;
-
 use rouille::Request;
 use rouille::Response;
 use rouille::post_input;
@@ -596,7 +595,13 @@ impl Manager {
     fn refresh(&self) {
         if let Ok(bulbs) = self.bulbs.lock() {
             for bulb in bulbs.values() {
-                bulb.query_for_missing_info(&self.sock).unwrap();
+                match bulb.query_for_missing_info(&self.sock){
+                    Ok(missing_info) => {
+                    },
+                    Err(e) => {
+                        println!("Error querying for missing info: {:?}", e);
+                    }
+                }
             }
         }
     }
