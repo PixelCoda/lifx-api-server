@@ -15,7 +15,7 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-lifx-rs = { git = "https://github.com/PixelCoda/lifx-rs.git", version = "0.1.29" }
+lifx-rs = { git = "https://github.com/PixelCoda/lifx-rs.git", version = "0.1.30" }
 failure = "0.1.8"
 palette = "0.2.1"
 rand = "0.8.4"
