@@ -5,20 +5,20 @@
 
 
 use get_if_addrs::{get_if_addrs, IfAddr, Ifv4Addr};
-use lifx_rs::lan::{get_product_info, BuildOptions, Message, PowerLevel, ProductInfo, RawMessage, Service, HSBK};
+use lifx_rs::lan::{get_product_info, BuildOptions, Message, PowerLevel, ProductInfo, RawMessage, HSBK};
 use std::collections::HashMap;
 use std::net::{IpAddr, SocketAddr, UdpSocket};
 use std::sync::{Arc, Mutex};
-use std::thread::{sleep, spawn};
+use std::thread::{spawn};
 use std::time::{Duration, Instant};
 use rouille::try_or_400;
 use rand::{thread_rng, Rng};
 use rand::distributions::Alphanumeric;
 use std::thread;
-use rouille::Request;
+
 use rouille::Response;
 use rouille::post_input;
-use serde_json::json;
+
 
 use serde::{Serialize, Deserialize};
 
@@ -26,7 +26,7 @@ use palette::FromColor;
 
 use colors_transform::{Rgb, Color};
 
-use std::str::FromStr;
+
 
 const HOUR: Duration = Duration::from_secs(60 * 60);
 
@@ -376,7 +376,7 @@ impl Manager {
 
     fn handle_message(raw: RawMessage, bulb: &mut BulbInfo) -> Result<(), lifx_rs::lan::Error> {
         match Message::from_raw(&raw)? {
-            Message::StateService { port, service } => {
+            Message::StateService { port: _, service: _ } => {
                 // if port != bulb.addr.port() as u32 || service != Service::UDP {
                 //     println!("Unsupported service: {:?}/{}", service, port);
                 // }
@@ -388,7 +388,7 @@ impl Manager {
             },
 
   
-            Message::StateLocation { location, label, updated_at } => {
+            Message::StateLocation { location, label, updated_at: _ } => {
 
                 let lab = label.0;
 
@@ -437,7 +437,7 @@ impl Manager {
                
             },
 
-            Message::StateGroup { group, label, updated_at } => {
+            Message::StateGroup { group, label, updated_at: _ } => {
 
                 let group_one = LifxGroup{id: format!("{:?}", group.0), name: label.to_string()};
                 
@@ -596,7 +596,7 @@ impl Manager {
         if let Ok(bulbs) = self.bulbs.lock() {
             for bulb in bulbs.values() {
                 match bulb.query_for_missing_info(&self.sock){
-                    Ok(missing_info) => {
+                    Ok(_missing_info) => {
                     },
                     Err(e) => {
                         println!("Error querying for missing info: {:?}", e);
@@ -625,8 +625,8 @@ pub fn start(config: Config) {
     let mgr = Manager::new();
 
     match mgr {
-        Ok(mut mgr) => {
-            let mut mgr_arc = Arc::new(Mutex::new(mgr));
+        Ok(mgr) => {
+            let mgr_arc = Arc::new(Mutex::new(mgr));
 
             let th_arc_mgr = Arc::clone(&mgr_arc);
 
@@ -677,7 +677,7 @@ pub fn start(config: Config) {
         
         
                     let urls = request.url().to_string();
-                    let mut split = urls.split("/");
+                    let split = urls.split("/");
                     let vec: Vec<&str> = split.collect();
         
                     let mut selector = "";
@@ -883,7 +883,7 @@ pub fn start(config: Config) {
         
                                 if cc.contains("hue:"){
         
-                                    let mut hue_split = cc.split("hue:");
+                                    let hue_split = cc.split("hue:");
                                     let hue_vec: Vec<&str> = hue_split.collect();
                                     let new_hue = hue_vec[1].to_string().parse::<u16>().unwrap(); 
                                     let hbsk_set = HSBK {
@@ -896,7 +896,7 @@ pub fn start(config: Config) {
                                 }
         
                                 if cc.contains("saturation:"){
-                                    let mut saturation_split = cc.split("saturation:");
+                                    let saturation_split = cc.split("saturation:");
                                     let saturation_vec: Vec<&str> = saturation_split.collect();
                                     let new_saturation_float = saturation_vec[1].to_string().parse::<f64>().unwrap(); 
                                     let new_saturation: u16 = (f64::from(100) * new_saturation_float) as u16;
@@ -910,7 +910,7 @@ pub fn start(config: Config) {
                                 }
         
                                 if cc.contains("brightness:"){
-                                    let mut brightness_split = cc.split("brightness:");
+                                    let brightness_split = cc.split("brightness:");
                                     let brightness_vec: Vec<&str> = brightness_split.collect();
                                     let new_brightness_float = brightness_vec[1].to_string().parse::<f64>().unwrap(); 
                                     let new_brightness: u16 = (f64::from(65535) * new_brightness_float) as u16;
@@ -924,7 +924,7 @@ pub fn start(config: Config) {
                                 }
         
                                 if cc.contains("kelvin:"){
-                                    let mut kelvin_split = cc.split("kelvin:");
+                                    let kelvin_split = cc.split("kelvin:");
                                     let kelvin_vec: Vec<&str> = kelvin_split.collect();
                                     let new_kelvin = kelvin_vec[1].to_string().parse::<u16>().unwrap(); 
                                     let hbsk_set = HSBK {
@@ -939,11 +939,11 @@ pub fn start(config: Config) {
                                 if cc.contains("rgb:"){
         
         
-                                    let mut rgb_split = cc.split("rgb:");
+                                    let rgb_split = cc.split("rgb:");
                                     let rgb_vec: Vec<&str> = rgb_split.collect();
                                     let rgb_parts = rgb_vec[1].to_string();
         
-                                    let mut rgb_part_split = rgb_parts.split(",");
+                                    let rgb_part_split = rgb_parts.split(",");
                                     let rgb_parts_vec: Vec<&str> = rgb_part_split.collect();
         
                                     let red_int = rgb_parts_vec[0].to_string().parse::<i64>().unwrap(); 
@@ -976,7 +976,7 @@ pub fn start(config: Config) {
         
                                 if cc.contains("#"){
                                     println!("!CC!");
-                                    let mut hex_split = cc.split("#");
+                                    let hex_split = cc.split("#");
                                     let hex_vec: Vec<&str> = hex_split.collect();
                                     let hex = hex_vec[1].to_string();
         
